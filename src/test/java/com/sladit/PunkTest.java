@@ -1,6 +1,7 @@
 package com.sladit;
 
 import com.sladit.jpunk.Punk;
+import org.bouncycastle.openpgp.PGPException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,21 +25,29 @@ public class PunkTest {
     }
 
     @Test
-    public void encodeString() throws IOException {
+    public void encodeString() throws IOException, PGPException {
         String payload = STRING_PAYLOAD;
         byte[] steganogram = Punk.encode(inputBytes, payload.getBytes());
         assertFalse(Arrays.equals(inputBytes, steganogram));
     }
 
     @Test
-    public void encodeEmptyString() throws IOException {
+    public void encodeEmptyString() throws IOException, PGPException {
         String payload = "";
         byte[] steganogram = Punk.encode(inputBytes, payload.getBytes());
         assertFalse(Arrays.equals(inputBytes, steganogram));
     }
 
+    /*@Test
+    public void encodeAndEncryptString() throws IOException {
+        String payload = STRING_PAYLOAD;
+        String passphrase = "Pass@Phrase123";
+        byte[] steganogram = Punk.encode(inputBytes, payload.getBytes(), passphrase);
+        assertFalse(Arrays.equals(inputBytes, steganogram));
+    }*/
+
     @Test
-    public void decodeString() throws IOException {
+    public void decodeString() throws IOException, PGPException {
         String payload = STRING_PAYLOAD;
         byte[] steganogram = Punk.encode(inputBytes, payload.getBytes());
 
@@ -46,4 +55,16 @@ public class PunkTest {
         assertArrayEquals(STRING_PAYLOAD.getBytes(), decoded);
         assertEquals(STRING_PAYLOAD, new String(decoded));
     }
+
+    /*@Test
+    public void decodeEncryptedString() throws IOException {
+        String payload = STRING_PAYLOAD;
+        String passphrase = "Pass@Phrase123";
+
+        byte[] steganogram = Punk.encode(inputBytes, payload.getBytes(), passphrase);
+
+        byte[] decoded = Punk.decode(steganogram, passphrase);
+        assertArrayEquals(STRING_PAYLOAD.getBytes(), decoded);
+        assertEquals(STRING_PAYLOAD, new String(decoded));
+    }*/
 }
