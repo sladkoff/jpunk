@@ -1,7 +1,10 @@
 package com.sladit;
 
+import com.sladit.jpunk.EncryptionConfig;
 import com.sladit.jpunk.Punk;
 import org.bouncycastle.openpgp.PGPException;
+import org.c02e.jpgpj.Key;
+import org.c02e.jpgpj.Ring;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -18,9 +21,26 @@ public class PunkTest {
 
     private byte[] inputBytes;
 
+    private Key secretKeySender;
+    private Key publicKeySender;
+    private Key secretKeyReceiver;
+    private Key publicKeyReceiver;
+
     @Before
     public void setup() throws IOException {
         File inputFile = new File("src/test/resources/PNG_transparency_demonstration_1.png");
+
+        try {
+            secretKeySender = new Key(new File("src/test/resources/punk.key"), "12345678");
+            publicKeySender = new Key(new File("src/test/resources/punk.gpg"));
+
+            secretKeyReceiver = new Key(new File("src/test/resources/punk2.key"), "12345678");
+            publicKeyReceiver = new Key(new File("src/test/resources/punk2.gpg"));
+
+        } catch (PGPException e) {
+            e.printStackTrace();
+        }
+
         inputBytes = Files.readAllBytes(inputFile.toPath());
     }
 
@@ -38,14 +58,6 @@ public class PunkTest {
         assertFalse(Arrays.equals(inputBytes, steganogram));
     }
 
-    /*@Test
-    public void encodeAndEncryptString() throws IOException {
-        String payload = STRING_PAYLOAD;
-        String passphrase = "Pass@Phrase123";
-        byte[] steganogram = Punk.encode(inputBytes, payload.getBytes(), passphrase);
-        assertFalse(Arrays.equals(inputBytes, steganogram));
-    }*/
-
     @Test
     public void decodeString() throws IOException, PGPException {
         String payload = STRING_PAYLOAD;
@@ -56,15 +68,19 @@ public class PunkTest {
         assertEquals(STRING_PAYLOAD, new String(decoded));
     }
 
-    /*@Test
-    public void decodeEncryptedString() throws IOException {
+    @Test
+    public void decodeEncryptedString() throws IOException, PGPException {
         String payload = STRING_PAYLOAD;
-        String passphrase = "Pass@Phrase123";
 
-        byte[] steganogram = Punk.encode(inputBytes, payload.getBytes(), passphrase);
+        EncryptionConfig encryptionConfig = new EncryptionConfig();
+        encryptionConfig.setUnsigned(true);
+        encryptionConfig.setKeyRing(new Ring(secretKeySender, publicKeyReceiver));
+        byte[] steganogram = Punk.encode(inputBytes, payload.getBytes(), encryptionConfig);
 
-        byte[] decoded = Punk.decode(steganogram, passphrase);
+        encryptionConfig.setKeyRing(new Ring(publicKeySender, secretKeyReceiver));
+        byte[] decoded = Punk.decode(steganogram, encryptionConfig);
         assertArrayEquals(STRING_PAYLOAD.getBytes(), decoded);
         assertEquals(STRING_PAYLOAD, new String(decoded));
-    }*/
+    }
+
 }

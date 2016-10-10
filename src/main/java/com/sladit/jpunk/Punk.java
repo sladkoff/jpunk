@@ -18,7 +18,8 @@ public class Punk {
     private static final String PUNK_CHUNK_TYPE = "PUNK";
     private static final byte[] PNG_START_SIGNATURE = {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
 
-    public static byte[] encode(byte[] target, byte[] payload, EncryptionConfig encryptionConfig) throws IOException, PGPException {
+    public static byte[] encode(byte[] target, byte[] payload, EncryptionConfig encryptionConfig) throws IOException,
+                                                                                                         PGPException {
 
         if (encryptionConfig != null) {
             Encryptor encryptor = new Encryptor(encryptionConfig.getKeyRing());
@@ -54,7 +55,8 @@ public class Punk {
         return encode(target, payload, null);
     }
 
-    public static byte[] decode(byte[] source, @Nullable EncryptionConfig encryptionConfig) throws IOException, PGPException {
+    public static byte[] decode(byte[] source, @Nullable EncryptionConfig encryptionConfig) throws IOException,
+                                                                                                   PGPException {
         ChunkReader chunkReader = new ChunkReader(new ByteArrayInputStream(source));
         Optional<Chunk> chunkByType = chunkReader.findChunkByType(PUNK_CHUNK_TYPE);
         if (chunkByType.isPresent()) {
@@ -62,7 +64,7 @@ public class Punk {
             if (encryptionConfig != null) {
                 Decryptor decryptor = new Decryptor(encryptionConfig.getKeyRing());
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
-                decryptor.decrypt(new ByteArrayInputStream(source), out);
+                decryptor.decrypt(new ByteArrayInputStream(content), out);
                 return out.toByteArray();
             }
             return content;
