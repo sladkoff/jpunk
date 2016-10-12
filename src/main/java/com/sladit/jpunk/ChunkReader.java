@@ -17,7 +17,7 @@ class ChunkReader {
         in.mark(0);
     }
 
-    Chunk readNextChunk() throws IOException {
+    <T extends Chunk> T readNextChunk() throws IOException {
 
         byte[] chunkSize = new byte[4];
         in.read(chunkSize, 0, 4);
@@ -33,17 +33,7 @@ class ChunkReader {
         byte[] chunkCrc = new byte[4];
         in.read(chunkCrc, 0, 4);
 
-        return new Chunk(type, chunkContent, chunkCrc);
-    }
-
-    Chunk findEndChunk() throws IOException {
-        Chunk chunk = readNextChunk();
-
-        while (!Chunk.END_CHUNK_TYPE.equals(chunk.getType())) {
-            chunk = readNextChunk();
-        }
-
-        return chunk;
+        return ChunkFactory.forType(type).getInstance(chunkContent, chunkCrc);
     }
 
     Optional<Chunk> findChunkByType(String type) throws IOException {
@@ -51,12 +41,14 @@ class ChunkReader {
     }
 
     List<Chunk> readChunks() throws IOException {
+        in.reset();
+
         List<Chunk> chunks = new ArrayList<>();
 
         Chunk chunk = readNextChunk();
         chunks.add(chunk);
 
-        while (!Chunk.END_CHUNK_TYPE.equals(chunk.getType())) {
+        while (!Chunk.END_CHUNK_TYPE.equals(chunk.getType()) && in.available() > 0) {
             chunk = readNextChunk();
             chunks.add(chunk);
         }
